@@ -3,15 +3,30 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SiteLayout } from "@/components/site-layout";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
+import PrivacyPolicy from "@/pages/privacy-policy";
+import TermsOfService from "@/pages/terms-of-service";
+import About from "@/pages/about";
+import Contact from "@/pages/contact";
+import Disclaimer from "@/pages/disclaimer";
+import YouTubeToMp3Guide from "@/pages/tools/youtube-to-mp3-guide";
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route component={NotFound} />
-    </Switch>
+    <SiteLayout>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/privacy-policy" component={PrivacyPolicy} />
+        <Route path="/terms-of-service" component={TermsOfService} />
+        <Route path="/about" component={About} />
+        <Route path="/contact" component={Contact} />
+        <Route path="/disclaimer" component={Disclaimer} />
+        <Route path="/tools/youtube-to-mp3-guide" component={YouTubeToMp3Guide} />
+        <Route component={NotFound} />
+      </Switch>
+    </SiteLayout>
   );
 }
 

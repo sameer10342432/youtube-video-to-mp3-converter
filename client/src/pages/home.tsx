@@ -19,11 +19,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { Seo } from "@/components/seo";
 import { apiRequest } from "@/lib/queryClient";
 import { youtubeUrlSchema, type ConversionJob, type AudioQuality } from "@shared/schema";
 import {
-  Music,
   Zap,
   Shield,
   Download,
@@ -39,6 +38,7 @@ import {
   Play,
   Pause,
   Users,
+  Music,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -425,24 +425,14 @@ export default function Home() {
   const isValidUrl = url.trim() && !urlError;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Music className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="font-semibold text-lg" data-testid="text-logo">
-                YT2MP3
-              </span>
-            </div>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
-
-      <main className="pt-24 pb-16">
+    <>
+      <Seo
+        title="YouTube to MP3 Converter - Fast, Free, No Registration"
+        description="Convert YouTube videos to MP3 audio files instantly. Free, fast, and no registration required. High-quality 128kbps to 320kbps audio extraction with secure downloads."
+        keywords="youtube to mp3, mp3 converter, audio download"
+      />
+      
+      <main className="py-8 pb-16">
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 -z-10">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/10" />
@@ -742,26 +732,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-
-      <footer className="border-t border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-                <Music className="w-3 h-3 text-primary-foreground" />
-              </div>
-              <span className="font-medium text-sm" data-testid="text-footer-logo">YT2MP3</span>
-            </div>
-            <p className="text-sm text-muted-foreground text-center" data-testid="text-disclaimer">
-              For personal use only. Respect copyright laws in your country.
-            </p>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>Terms</span>
-              <span>Privacy</span>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </>
   );
 }
