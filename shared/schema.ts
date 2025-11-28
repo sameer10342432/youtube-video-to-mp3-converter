@@ -25,8 +25,12 @@ export const conversionJobSchema = z.object({
 
 export type ConversionJob = z.infer<typeof conversionJobSchema>;
 
+export const audioQualitySchema = z.enum(["128", "192", "320"]);
+export type AudioQuality = z.infer<typeof audioQualitySchema>;
+
 export const insertConversionJobSchema = z.object({
   youtubeUrl: z.string().url(),
+  quality: audioQualitySchema.default("128"),
 });
 
 export type InsertConversionJob = z.infer<typeof insertConversionJobSchema>;

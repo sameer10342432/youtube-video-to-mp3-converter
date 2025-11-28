@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { spawn } from "child_process";
 import { existsSync, unlinkSync, statSync, mkdirSync } from "fs";
 import path from "path";
-import { insertConversionJobSchema, youtubeUrlSchema } from "@shared/schema";
+import { insertConversionJobSchema, youtubeUrlSchema, type AudioQuality } from "@shared/schema";
 
 const TEMP_DIR = path.join(process.cwd(), "temp");
 
@@ -87,18 +87,33 @@ async function getVideoInfo(url: string): Promise<{ title: string; duration: num
   });
 }
 
+function getYtdlpAudioQuality(quality: AudioQuality): string {
+  switch (quality) {
+    case "320":
+      return "0";
+    case "192":
+      return "2";
+    case "128":
+    default:
+      return "5";
+  }
+}
+
 async function downloadAndConvert(
   url: string, 
   outputPath: string, 
+  quality: AudioQuality,
   onProgress: (progress: number, stage: string) => void
 ): Promise<boolean> {
   return new Promise((resolve) => {
     onProgress(10, "extracting");
 
+    const audioQuality = getYtdlpAudioQuality(quality);
+    
     const ytdlp = spawn("yt-dlp", [
       "-x",
       "--audio-format", "mp3",
-      "--audio-quality", "0",
+      "--audio-quality", audioQuality,
       "-o", outputPath,
       "--no-playlist",
       "--progress",
@@ -160,7 +175,7 @@ export async function registerRoutes(
         });
       }
 
-      const { youtubeUrl } = parseResult.data;
+      const { youtubeUrl, quality } = parseResult.data;
 
       const urlValidation = youtubeUrlSchema.safeParse(youtubeUrl);
       if (!urlValidation.success) {
@@ -172,7 +187,7 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Could not extract video ID from URL" });
       }
 
-      const job = await storage.createConversionJob({ youtubeUrl });
+      const job = await storage.createConversionJob({ youtubeUrl, quality });
 
       (async () => {
         try {
@@ -200,6 +215,7 @@ export async function registerRoutes(
           const success = await downloadAndConvert(
             youtubeUrl,
             outputPath,
+            quality,
             async (progress, stage) => {
               await storage.updateConversionJob(job.id, {
                 progress,

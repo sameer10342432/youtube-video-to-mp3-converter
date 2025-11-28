@@ -5,9 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { apiRequest } from "@/lib/queryClient";
-import { youtubeUrlSchema, type ConversionJob } from "@shared/schema";
+import { youtubeUrlSchema, type ConversionJob, type AudioQuality } from "@shared/schema";
 import {
   Music,
   Zap,
@@ -30,6 +37,7 @@ interface ConversionResult {
 
 export default function Home() {
   const [url, setUrl] = useState("");
+  const [quality, setQuality] = useState<AudioQuality>("128");
   const [urlError, setUrlError] = useState<string | null>(null);
   const [conversionState, setConversionState] = useState<ConversionState>("idle");
   const [progress, setProgress] = useState(0);
@@ -52,13 +60,13 @@ export default function Home() {
   }, []);
 
   const conversionMutation = useMutation({
-    mutationFn: async (youtubeUrl: string) => {
+    mutationFn: async ({ youtubeUrl, quality }: { youtubeUrl: string; quality: AudioQuality }) => {
       setConversionState("processing");
       setProgress(0);
       setProgressMessage("Validating YouTube link...");
       setErrorMessage(null);
 
-      const response = await apiRequest("POST", "/api/convert", { youtubeUrl });
+      const response = await apiRequest("POST", "/api/convert", { youtubeUrl, quality });
       const data = await response.json();
 
       if (!response.ok) {
@@ -125,7 +133,7 @@ export default function Home() {
 
   const handleConvert = () => {
     if (!validateUrl(url)) return;
-    conversionMutation.mutate(url);
+    conversionMutation.mutate({ youtubeUrl: url, quality });
   };
 
   const handleClearUrl = () => {
@@ -135,6 +143,7 @@ export default function Home() {
 
   const handleConvertAnother = () => {
     setUrl("");
+    setQuality("128");
     setUrlError(null);
     setConversionState("idle");
     setProgress(0);
@@ -252,14 +261,29 @@ export default function Home() {
                       </p>
                     )}
                   </div>
-                  <Button
-                    onClick={handleConvert}
-                    disabled={!isValidUrl}
-                    className="w-full md:w-auto md:px-12 h-14 text-lg font-semibold rounded-full"
-                    data-testid="button-convert"
-                  >
-                    Convert to MP3
-                  </Button>
+                  <div className="flex flex-col md:flex-row gap-3">
+                    <Select value={quality} onValueChange={(v) => setQuality(v as AudioQuality)}>
+                      <SelectTrigger
+                        className="h-14 rounded-xl border-2 border-input text-base md:w-40"
+                        data-testid="select-quality"
+                      >
+                        <SelectValue placeholder="Quality" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="128">128 kbps</SelectItem>
+                        <SelectItem value="192">192 kbps</SelectItem>
+                        <SelectItem value="320">320 kbps</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      onClick={handleConvert}
+                      disabled={!isValidUrl}
+                      className="flex-1 md:flex-none md:px-12 h-14 text-lg font-semibold rounded-full"
+                      data-testid="button-convert"
+                    >
+                      Convert to MP3
+                    </Button>
+                  </div>
                 </div>
               )}
 
