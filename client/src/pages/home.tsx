@@ -39,6 +39,15 @@ import {
   Pause,
   Users,
   Music,
+  Settings,
+  Headphones,
+  Star,
+  HelpCircle,
+  BookOpen,
+  Smartphone,
+  Monitor,
+  FileAudio,
+  AlertTriangle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -731,6 +740,388 @@ export default function Home() {
             </Card>
           </div>
         </section>
+
+        <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12" data-testid="article-guide">
+          <section data-testid="section-what-is">
+            <Card className="p-6 md:p-8" data-testid="card-what-is">
+              <div className="flex items-start gap-4">
+                <Play className="w-6 h-6 text-primary mt-1 flex-shrink-0" />
+                <div>
+                  <h2 className="text-2xl font-bold mb-4" data-testid="heading-what-is">What is a YouTube to MP3 Converter?</h2>
+                  <p className="text-muted-foreground mb-4">
+                    A YouTube to MP3 converter is an online tool that extracts the audio track from YouTube videos and saves it as an MP3 file. MP3 is the most widely supported audio format, compatible with virtually every device, music player, and operating system.
+                  </p>
+                  <p className="text-muted-foreground mb-4">
+                    These converters work by downloading the video from YouTube, separating the audio stream from the video stream, and then encoding that audio into the MP3 format. The result is a standalone audio file that you can listen to offline, on any device, without needing an internet connection.
+                  </p>
+                  <h3 className="text-xl font-semibold mb-3">Key Benefits of YouTube to MP3 Conversion</h3>
+                  <ul className="space-y-2 text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                      <span><strong>Offline Listening:</strong> Listen to your favorite content without an internet connection</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                      <span><strong>Reduced Data Usage:</strong> Audio files are much smaller than video, saving mobile data</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                      <span><strong>Universal Compatibility:</strong> MP3 files work on any device or player</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                      <span><strong>Background Playback:</strong> Listen while using other apps on your phone</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </Card>
+          </section>
+
+          <section data-testid="section-how-it-works">
+            <Card className="p-6 md:p-8" data-testid="card-how-it-works">
+              <div className="flex items-start gap-4">
+                <Settings className="w-6 h-6 text-primary mt-1 flex-shrink-0" />
+                <div>
+                  <h2 className="text-2xl font-bold mb-4" data-testid="heading-how-it-works">How Does YouTube to MP3 Conversion Work?</h2>
+                  <p className="text-muted-foreground mb-4">
+                    Understanding the technical process behind YouTube to MP3 conversion helps you appreciate what happens when you use our converter:
+                  </p>
+                  
+                  <div className="space-y-6">
+                    <div className="border-l-4 border-primary pl-4">
+                      <h3 className="text-lg font-semibold mb-2">Step 1: URL Processing</h3>
+                      <p className="text-muted-foreground">
+                        When you submit a YouTube URL, our server validates the link format and extracts the unique video identifier.
+                      </p>
+                    </div>
+                    
+                    <div className="border-l-4 border-primary pl-4">
+                      <h3 className="text-lg font-semibold mb-2">Step 2: Video Information Retrieval</h3>
+                      <p className="text-muted-foreground">
+                        Our system fetches metadata about the video, including title, duration, and available quality options.
+                      </p>
+                    </div>
+                    
+                    <div className="border-l-4 border-primary pl-4">
+                      <h3 className="text-lg font-semibold mb-2">Step 3: Audio Stream Extraction</h3>
+                      <p className="text-muted-foreground">
+                        The converter identifies and downloads the audio stream from the video, extracting only the audio portion.
+                      </p>
+                    </div>
+                    
+                    <div className="border-l-4 border-primary pl-4">
+                      <h3 className="text-lg font-semibold mb-2">Step 4: MP3 Encoding</h3>
+                      <p className="text-muted-foreground">
+                        The extracted audio is encoded into MP3 format at your selected quality (128kbps, 192kbps, or 320kbps).
+                      </p>
+                    </div>
+                    
+                    <div className="border-l-4 border-primary pl-4">
+                      <h3 className="text-lg font-semibold mb-2">Step 5: File Delivery</h3>
+                      <p className="text-muted-foreground">
+                        Once conversion is complete, a download link is generated. The file is available for 30 minutes before automatic cleanup.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </section>
+
+          <section data-testid="section-audio-quality">
+            <Card className="p-6 md:p-8" data-testid="card-audio-quality">
+              <div className="flex items-start gap-4">
+                <Headphones className="w-6 h-6 text-primary mt-1 flex-shrink-0" />
+                <div>
+                  <h2 className="text-2xl font-bold mb-4" data-testid="heading-audio-quality">Understanding Audio Quality Settings</h2>
+                  <p className="text-muted-foreground mb-6">
+                    Choosing the right audio quality depends on your listening preferences and storage constraints:
+                  </p>
+                  
+                  <div className="grid gap-6 md:grid-cols-3">
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Star className="w-5 h-5 text-muted-foreground" />
+                        <h3 className="font-semibold">128 kbps</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">Standard Quality</p>
+                      <ul className="text-sm space-y-1 text-muted-foreground">
+                        <li>• Smallest file size</li>
+                        <li>• Good for speech/podcasts</li>
+                        <li>• Suitable for casual listening</li>
+                        <li>• ~1 MB per minute</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="border rounded-lg p-4 border-primary bg-primary/5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Star className="w-5 h-5 text-primary" />
+                        <Star className="w-5 h-5 text-primary" />
+                        <h3 className="font-semibold">192 kbps</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">High Quality (Recommended)</p>
+                      <ul className="text-sm space-y-1 text-muted-foreground">
+                        <li>• Balanced size/quality</li>
+                        <li>• Great for music</li>
+                        <li>• Most popular choice</li>
+                        <li>• ~1.5 MB per minute</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Star className="w-5 h-5 text-amber-500" />
+                        <Star className="w-5 h-5 text-amber-500" />
+                        <Star className="w-5 h-5 text-amber-500" />
+                        <h3 className="font-semibold">320 kbps</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">Best Quality</p>
+                      <ul className="text-sm space-y-1 text-muted-foreground">
+                        <li>• Highest MP3 quality</li>
+                        <li>• Audiophile grade</li>
+                        <li>• Best for music lovers</li>
+                        <li>• ~2.5 MB per minute</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </section>
+
+          <section data-testid="section-use-cases">
+            <Card className="p-6 md:p-8" data-testid="card-use-cases">
+              <div className="flex items-start gap-4">
+                <FileAudio className="w-6 h-6 text-primary mt-1 flex-shrink-0" />
+                <div>
+                  <h2 className="text-2xl font-bold mb-4" data-testid="heading-use-cases">Common Use Cases for YouTube to MP3 Conversion</h2>
+                  <p className="text-muted-foreground mb-6">
+                    There are many legitimate reasons why people convert YouTube videos to MP3:
+                  </p>
+                  
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Headphones className="w-5 h-5 text-primary" />
+                        <h3 className="font-semibold">Podcast Listening</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Download podcasts for offline listening during commutes, workouts, or travel.
+                      </p>
+                    </div>
+                    
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <BookOpen className="w-5 h-5 text-primary" />
+                        <h3 className="font-semibold">Educational Content</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Convert lectures, tutorials, and educational videos for studying on the go.
+                      </p>
+                    </div>
+                    
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Music className="w-5 h-5 text-primary" />
+                        <h3 className="font-semibold">Personal Music Library</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Save your own music or royalty-free tracks for personal playlists.
+                      </p>
+                    </div>
+                    
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Smartphone className="w-5 h-5 text-primary" />
+                        <h3 className="font-semibold">Mobile Convenience</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Reduce data usage and battery consumption by listening to audio-only.
+                      </p>
+                    </div>
+                    
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Monitor className="w-5 h-5 text-primary" />
+                        <h3 className="font-semibold">Background Audio</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Play audio in the background while using other apps or working.
+                      </p>
+                    </div>
+                    
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className="w-5 h-5 text-primary" />
+                        <h3 className="font-semibold">Offline Access</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Save content for areas with limited internet connectivity.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </section>
+
+          <section data-testid="section-legal">
+            <Card className="p-6 md:p-8 border-amber-500/30" data-testid="card-legal">
+              <div className="flex items-start gap-4">
+                <Shield className="w-6 h-6 text-amber-500 mt-1 flex-shrink-0" />
+                <div>
+                  <h2 className="text-2xl font-bold mb-4" data-testid="heading-legal">Legal Considerations</h2>
+                  <p className="text-muted-foreground mb-4">
+                    Understanding the legal landscape around YouTube to MP3 conversion is important for responsible use:
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-semibold text-green-700 dark:text-green-400">When Conversion is Generally Acceptable</h3>
+                        <ul className="text-sm text-muted-foreground mt-1 space-y-1">
+                          <li>• Content you created or own</li>
+                          <li>• Videos under Creative Commons license</li>
+                          <li>• Content with explicit permission from the creator</li>
+                          <li>• Public domain content</li>
+                        </ul>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-semibold text-amber-700 dark:text-amber-400">When to Be Cautious</h3>
+                        <ul className="text-sm text-muted-foreground mt-1 space-y-1">
+                          <li>• Copyrighted music and videos</li>
+                          <li>• Content from record labels or media companies</li>
+                          <li>• Commercial use of any converted content</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                    <strong>Important:</strong> Copyright laws vary by country. Users are responsible for ensuring they comply with applicable laws in their jurisdiction.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </section>
+
+          <section data-testid="section-troubleshooting">
+            <Card className="p-6 md:p-8" data-testid="card-troubleshooting">
+              <div className="flex items-start gap-4">
+                <HelpCircle className="w-6 h-6 text-primary mt-1 flex-shrink-0" />
+                <div>
+                  <h2 className="text-2xl font-bold mb-4" data-testid="heading-troubleshooting">Troubleshooting Common Issues</h2>
+                  <p className="text-muted-foreground mb-6">
+                    Encountering problems? Here are solutions to the most common issues:
+                  </p>
+                  
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="font-semibold mb-2">"Could not fetch video information"</h3>
+                      <p className="text-sm text-muted-foreground mb-2">This error usually means:</p>
+                      <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                        <li>• The video is private or unlisted</li>
+                        <li>• The video is age-restricted</li>
+                        <li>• The video is not available in your region</li>
+                        <li>• The URL is incorrect or malformed</li>
+                      </ul>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        <strong>Solution:</strong> Verify the video is publicly accessible and try copying the URL directly from YouTube.
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold mb-2">Conversion is taking too long</h3>
+                      <p className="text-sm text-muted-foreground mb-2">Possible reasons:</p>
+                      <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                        <li>• Long videos take more time to process</li>
+                        <li>• High server load during peak hours</li>
+                      </ul>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        <strong>Solution:</strong> For videos under 10 minutes, conversion typically takes 30-60 seconds. Longer videos may take several minutes.
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold mb-2">Download link expired</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Files are only available for 30 minutes after conversion. If your link has expired, simply run the conversion again.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </section>
+
+          <section data-testid="section-faq">
+            <Card className="p-6 md:p-8" data-testid="card-faq">
+              <div className="flex items-start gap-4">
+                <Zap className="w-6 h-6 text-primary mt-1 flex-shrink-0" />
+                <div>
+                  <h2 className="text-2xl font-bold mb-4" data-testid="heading-faq">Frequently Asked Questions</h2>
+                  
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="font-semibold mb-2">Is YT2MP3 free to use?</h3>
+                      <p className="text-muted-foreground">
+                        Yes, YT2MP3 is completely free. There are no hidden fees, subscription requirements, or premium tiers.
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold mb-2">Do I need to create an account?</h3>
+                      <p className="text-muted-foreground">
+                        No, we never require registration. Simply paste your URL and convert - no account, email, or personal information needed.
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold mb-2">What is the maximum video length supported?</h3>
+                      <p className="text-muted-foreground">
+                        We support videos up to 2 hours in length. This covers most music, podcasts, lectures, and other content types.
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold mb-2">Can I use YT2MP3 on my phone?</h3>
+                      <p className="text-muted-foreground">
+                        Yes! Our website is fully responsive and works perfectly on smartphones and tablets.
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold mb-2">Is my privacy protected?</h3>
+                      <p className="text-muted-foreground">
+                        Absolutely. We don't store your converted files permanently, we don't track what you convert, and we don't require any personal information.
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold mb-2">What if my conversion fails?</h3>
+                      <p className="text-muted-foreground">
+                        If a conversion fails, check that the video is publicly available and try again. Some videos may have restrictions that prevent conversion.
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold mb-2">Can I convert playlists?</h3>
+                      <p className="text-muted-foreground">
+                        Currently, we process one video at a time. To convert multiple videos, simply convert them individually.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </section>
+        </article>
       </main>
     </>
   );

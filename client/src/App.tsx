@@ -11,7 +11,6 @@ import TermsOfService from "@/pages/terms-of-service";
 import About from "@/pages/about";
 import Contact from "@/pages/contact";
 import Disclaimer from "@/pages/disclaimer";
-import YouTubeToMp3Guide from "@/pages/tools/youtube-to-mp3-guide";
 
 function Router() {
   return (
@@ -23,7 +22,6 @@ function Router() {
         <Route path="/about" component={About} />
         <Route path="/contact" component={Contact} />
         <Route path="/disclaimer" component={Disclaimer} />
-        <Route path="/tools/youtube-to-mp3-guide" component={YouTubeToMp3Guide} />
         <Route component={NotFound} />
       </Switch>
     </SiteLayout>

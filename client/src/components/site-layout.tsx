@@ -8,8 +8,6 @@ import {
   Users,
   Mail,
   AlertTriangle,
-  BookOpen,
-  Wrench,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -29,10 +27,6 @@ const legalPages = [
   { href: "/about", label: "About Us", icon: Users, testId: "link-footer-about" },
   { href: "/contact", label: "Contact", icon: Mail, testId: "link-footer-contact" },
   { href: "/disclaimer", label: "Disclaimer", icon: AlertTriangle, testId: "link-footer-disclaimer" },
-];
-
-const toolsPages = [
-  { href: "/tools/youtube-to-mp3-guide", label: "Complete YouTube to MP3 Guide", icon: BookOpen, testId: "link-tools-guide" },
 ];
 
 export function SiteLayout({ children }: SiteLayoutProps) {
@@ -61,26 +55,24 @@ export function SiteLayout({ children }: SiteLayoutProps) {
                     Converter
                   </Button>
                 </Link>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="gap-1" data-testid="button-tools-dropdown">
-                      <Wrench className="w-4 h-4" />
-                      Tools
-                      <ChevronDown className="w-3 h-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-64">
-                    {toolsPages.map((page) => (
-                      <DropdownMenuItem key={page.href} asChild>
-                        <Link href={page.href} className="flex items-center gap-2 cursor-pointer" data-testid={page.testId}>
-                          <page.icon className="w-4 h-4" />
-                          {page.label}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Link href="/about" data-testid="link-nav-about">
+                  <Button 
+                    variant={location === "/about" ? "secondary" : "ghost"} 
+                    size="sm"
+                    data-testid="button-nav-about"
+                  >
+                    About Us
+                  </Button>
+                </Link>
+                <Link href="/contact" data-testid="link-nav-contact">
+                  <Button 
+                    variant={location === "/contact" ? "secondary" : "ghost"} 
+                    size="sm"
+                    data-testid="button-nav-contact"
+                  >
+                    Contact Us
+                  </Button>
+                </Link>
               </nav>
             </div>
             
@@ -100,14 +92,36 @@ export function SiteLayout({ children }: SiteLayoutProps) {
                         Converter
                       </Link>
                     </DropdownMenuItem>
-                    {toolsPages.map((page) => (
-                      <DropdownMenuItem key={page.href} asChild>
-                        <Link href={page.href} className="flex items-center gap-2 cursor-pointer" data-testid={`mobile-${page.testId}`}>
-                          <page.icon className="w-4 h-4" />
-                          {page.label}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
+                    <DropdownMenuItem asChild>
+                      <Link href="/about" className="flex items-center gap-2 cursor-pointer" data-testid="link-mobile-about">
+                        <Users className="w-4 h-4" />
+                        About Us
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/contact" className="flex items-center gap-2 cursor-pointer" data-testid="link-mobile-contact">
+                        <Mail className="w-4 h-4" />
+                        Contact Us
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/privacy-policy" className="flex items-center gap-2 cursor-pointer" data-testid="link-mobile-privacy">
+                        <Shield className="w-4 h-4" />
+                        Privacy Policy
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/terms-of-service" className="flex items-center gap-2 cursor-pointer" data-testid="link-mobile-terms">
+                        <FileText className="w-4 h-4" />
+                        Terms of Service
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/disclaimer" className="flex items-center gap-2 cursor-pointer" data-testid="link-mobile-disclaimer">
+                        <AlertTriangle className="w-4 h-4" />
+                        Disclaimer
+                      </Link>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -144,13 +158,16 @@ export function SiteLayout({ children }: SiteLayoutProps) {
                     YouTube to MP3 Converter
                   </Link>
                 </li>
-                {toolsPages.map((page) => (
-                  <li key={page.href}>
-                    <Link href={page.href} className="text-muted-foreground hover:text-foreground transition-colors" data-testid={`footer-${page.testId}`}>
-                      {page.label}
-                    </Link>
-                  </li>
-                ))}
+                <li>
+                  <Link href="/about" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-about">
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contact" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-contact">
+                    Contact Us
+                  </Link>
+                </li>
               </ul>
             </div>
             
