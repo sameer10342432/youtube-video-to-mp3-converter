@@ -46,15 +46,6 @@ export function SiteLayout({ children }: SiteLayoutProps) {
               </Link>
               
               <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
-                <Link href="/" data-testid="link-nav-converter">
-                  <Button 
-                    variant={location === "/" ? "secondary" : "ghost"} 
-                    size="sm"
-                    data-testid="button-nav-converter"
-                  >
-                    Converter
-                  </Button>
-                </Link>
                 <Link href="/about" data-testid="link-nav-about">
                   <Button 
                     variant={location === "/about" ? "secondary" : "ghost"} 
@@ -86,12 +77,6 @@ export function SiteLayout({ children }: SiteLayoutProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem asChild>
-                      <Link href="/" className="flex items-center gap-2 cursor-pointer" data-testid="link-mobile-converter">
-                        <Music className="w-4 h-4" />
-                        Converter
-                      </Link>
-                    </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/about" className="flex items-center gap-2 cursor-pointer" data-testid="link-mobile-about">
                         <Users className="w-4 h-4" />

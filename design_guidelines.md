@@ -8,6 +8,32 @@ This conversion tool prioritizes efficiency, clarity, and trust. Material Design
 
 Reference inspiration: Draw from successful converter tools like CloudConvert and OnlineVideoConverter for their streamlined, single-purpose interfaces.
 
+## Color System
+
+**Primary Color: YouTube-inspired Red**
+- Light mode: `0 72% 51%` (vibrant red)
+- Dark mode: `0 72% 55%` (slightly lighter for dark backgrounds)
+- Used for: Primary buttons, logo accent, links, focus rings
+
+**Background Colors:**
+- Light mode: Off-white `0 0% 99%` for a clean, modern look
+- Dark mode: Deep navy-charcoal `220 20% 8%` for reduced eye strain
+
+**Text Colors:**
+- Light mode: Dark slate `220 15% 15%` for excellent readability
+- Dark mode: Near-white `0 0% 98%` for contrast
+
+**Accent Colors:**
+- Cards: Pure white (light) / Dark slate `220 18% 11%` (dark)
+- Muted elements: Soft grays with subtle blue undertones
+- Borders: Light gray with subtle blue hints for depth
+
+**Design Principles for Colors:**
+1. YouTube-inspired red creates brand recognition and energy
+2. Dark mode uses navy-charcoal tones instead of pure black for depth
+3. All colors maintain WCAG AA contrast ratios
+4. Subtle blue undertones in neutrals add sophistication
+
 ## Typography System
 
 **Font Family:**
