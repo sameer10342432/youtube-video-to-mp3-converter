@@ -249,6 +249,93 @@ async function downloadAndConvert(
   });
 }
 
+interface QueuedJob {
+  jobId: string;
+  callback: () => Promise<void>;
+}
+
+class ConversionQueue {
+  private static readonly MAX_CONCURRENT = 3;
+  private static readonly ESTIMATED_CONVERSION_TIME_SECONDS = 30;
+  
+  private activeJobs: Set<string> = new Set();
+  private waitingQueue: QueuedJob[] = [];
+
+  enqueue(jobId: string, callback: () => Promise<void>): { queued: boolean; position: number; estimatedWait: string } {
+    if (this.activeJobs.size < ConversionQueue.MAX_CONCURRENT) {
+      this.activeJobs.add(jobId);
+      callback().finally(() => this.dequeue(jobId));
+      return { queued: false, position: 0, estimatedWait: "" };
+    }
+
+    this.waitingQueue.push({ jobId, callback });
+    const position = this.waitingQueue.length;
+    const estimatedWait = this.getEstimatedWait(position);
+    
+    return { queued: true, position, estimatedWait };
+  }
+
+  private dequeue(jobId: string): void {
+    this.activeJobs.delete(jobId);
+    
+    if (this.waitingQueue.length > 0) {
+      const next = this.waitingQueue.shift()!;
+      this.activeJobs.add(next.jobId);
+      
+      this.updateQueuePositions();
+      
+      next.callback().finally(() => this.dequeue(next.jobId));
+    }
+  }
+
+  private async updateQueuePositions(): Promise<void> {
+    for (let i = 0; i < this.waitingQueue.length; i++) {
+      const queuedJob = this.waitingQueue[i];
+      const position = i + 1;
+      const estimatedWait = this.getEstimatedWait(position);
+      
+      await storage.updateConversionJob(queuedJob.jobId, {
+        queuePosition: position,
+        estimatedWaitTime: estimatedWait,
+      });
+    }
+  }
+
+  getQueuePosition(jobId: string): number {
+    if (this.activeJobs.has(jobId)) {
+      return 0;
+    }
+    
+    const index = this.waitingQueue.findIndex(job => job.jobId === jobId);
+    return index >= 0 ? index + 1 : -1;
+  }
+
+  getEstimatedWait(position: number): string {
+    if (position <= 0) return "";
+    
+    const totalSeconds = position * ConversionQueue.ESTIMATED_CONVERSION_TIME_SECONDS;
+    
+    if (totalSeconds < 60) {
+      return `~${totalSeconds} seconds`;
+    } else if (totalSeconds < 120) {
+      return "~1 minute";
+    } else {
+      const minutes = Math.ceil(totalSeconds / 60);
+      return `~${minutes} minutes`;
+    }
+  }
+
+  getActiveCount(): number {
+    return this.activeJobs.size;
+  }
+
+  getQueueLength(): number {
+    return this.waitingQueue.length;
+  }
+}
+
+const conversionQueue = new ConversionQueue();
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -305,8 +392,14 @@ export async function registerRoutes(
 
       const job = await storage.createConversionJob({ youtubeUrl, quality });
 
-      (async () => {
+      const conversionTask = async () => {
         try {
+          await storage.updateConversionJob(job.id, {
+            status: "validating",
+            queuePosition: 0,
+            estimatedWaitTime: undefined,
+          });
+
           const videoInfo = await getVideoInfo(youtubeUrl);
           
           if (!videoInfo) {
@@ -378,9 +471,28 @@ export async function registerRoutes(
             error: "An unexpected error occurred during conversion."
           });
         }
-      })();
+      };
 
-      res.json({ id: job.id, status: job.status });
+      const queueResult = conversionQueue.enqueue(job.id, conversionTask);
+
+      if (queueResult.queued) {
+        await storage.updateConversionJob(job.id, {
+          status: "queued",
+          queuePosition: queueResult.position,
+          estimatedWaitTime: queueResult.estimatedWait,
+        });
+        
+        console.log(`Job ${job.id} queued at position ${queueResult.position}. Active: ${conversionQueue.getActiveCount()}, Waiting: ${conversionQueue.getQueueLength()}`);
+        return res.json({ 
+          id: job.id, 
+          status: "queued", 
+          queuePosition: queueResult.position,
+          estimatedWaitTime: queueResult.estimatedWait,
+        });
+      }
+
+      console.log(`Job ${job.id} started immediately. Active: ${conversionQueue.getActiveCount()}, Waiting: ${conversionQueue.getQueueLength()}`);
+      res.json({ id: job.id, status: "validating" });
     } catch (err) {
       console.error("Convert endpoint error:", err);
       res.status(500).json({ error: "Internal server error" });

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const conversionStatusSchema = z.enum([
+  "queued",
   "validating",
   "extracting",
   "converting",
@@ -22,6 +23,8 @@ export const conversionJobSchema = z.object({
   downloadPath: z.string().optional(),
   error: z.string().optional(),
   cached: z.boolean().optional(),
+  queuePosition: z.number().optional(),
+  estimatedWaitTime: z.string().optional(),
 });
 
 export type ConversionJob = z.infer<typeof conversionJobSchema>;

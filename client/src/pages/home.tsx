@@ -38,6 +38,7 @@ import {
   Trash2,
   Play,
   Pause,
+  Users,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -211,6 +212,8 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isQueued, setIsQueued] = useState(false);
+  const [queuePosition, setQueuePosition] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -310,7 +313,17 @@ export default function Home() {
             setProgress(job.progress);
 
             switch (job.status) {
+              case "queued":
+                const position = job.queuePosition || 1;
+                const waitTime = job.estimatedWaitTime || "~30 seconds";
+                setIsQueued(true);
+                setQueuePosition(position);
+                setProgressMessage(`You are #${position} in queue. Estimated wait: ${waitTime}`);
+                setProgress(0);
+                break;
               case "validating":
+                setIsQueued(false);
+                setQueuePosition(0);
                 setProgressMessage("Validating YouTube link...");
                 break;
               case "extracting":
@@ -372,6 +385,8 @@ export default function Home() {
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(0);
+    setIsQueued(false);
+    setQueuePosition(0);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -533,17 +548,41 @@ export default function Home() {
               {conversionState === "processing" && (
                 <div className="space-y-6" data-testid="section-processing">
                   <div className="flex items-center gap-3">
-                    <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                    {isQueued ? (
+                      <Users className="w-6 h-6 text-amber-500" />
+                    ) : (
+                      <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                    )}
                     <span className="text-lg font-medium" data-testid="text-progress-message">
                       {progressMessage}
                     </span>
                   </div>
-                  <div className="space-y-2">
-                    <Progress value={progress} className="h-3 rounded-full" data-testid="progress-bar" />
-                    <p className="text-sm text-muted-foreground text-center" data-testid="text-progress-percent">
-                      {progress}% complete
-                    </p>
-                  </div>
+                  {isQueued ? (
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4" data-testid="section-queue-info">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+                          <span className="text-xl font-bold text-amber-600 dark:text-amber-400" data-testid="text-queue-position">
+                            #{queuePosition}
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-amber-700 dark:text-amber-300" data-testid="text-queue-status">
+                            Waiting in queue
+                          </p>
+                          <p className="text-sm text-amber-600/80 dark:text-amber-400/80">
+                            Your conversion will start automatically when a slot becomes available.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Progress value={progress} className="h-3 rounded-full" data-testid="progress-bar" />
+                      <p className="text-sm text-muted-foreground text-center" data-testid="text-progress-percent">
+                        {progress}% complete
+                      </p>
+                    </div>
+                  )}
                   {conversionResult?.job?.videoTitle && (
                     <p className="text-sm text-muted-foreground truncate" data-testid="text-video-title">
                       {conversionResult.job.videoTitle}
