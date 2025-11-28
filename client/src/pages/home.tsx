@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,8 @@ import {
   History,
   RotateCcw,
   Trash2,
+  Play,
+  Pause,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -206,6 +208,10 @@ export default function Home() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [currentConversionUrl, setCurrentConversionUrl] = useState("");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     setHistory(getHistoryFromStorage());
@@ -363,6 +369,30 @@ export default function Home() {
     setProgressMessage("");
     setConversionResult(null);
     setErrorMessage(null);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  };
+
+  const handlePlayPause = () => {
+    if (!audioRef.current) return;
+    
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const handleRetry = () => {
@@ -550,6 +580,36 @@ export default function Home() {
                         </span>
                       )}
                     </div>
+                  </div>
+                  <div className="flex items-center gap-3 bg-muted/30 rounded-xl p-3">
+                    <audio
+                      ref={audioRef}
+                      src={`/api/preview/${conversionResult.job.id}`}
+                      onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+                      onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+                      onEnded={() => setIsPlaying(false)}
+                      onPlay={() => setIsPlaying(true)}
+                      onPause={() => setIsPlaying(false)}
+                      data-testid="audio-preview"
+                    />
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={handlePlayPause}
+                      data-testid="button-preview-play"
+                    >
+                      {isPlaying ? (
+                        <Pause className="w-4 h-4" />
+                      ) : (
+                        <Play className="w-4 h-4" />
+                      )}
+                    </Button>
+                    <span className="text-sm text-muted-foreground tabular-nums">
+                      {formatTime(currentTime)} / {duration > 0 ? formatTime(duration) : "0:30"}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Preview (30s)
+                    </span>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Button

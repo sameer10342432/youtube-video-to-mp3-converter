@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spawn } from "child_process";
-import { existsSync, unlinkSync, statSync, mkdirSync } from "fs";
+import { existsSync, unlinkSync, statSync, mkdirSync, createReadStream } from "fs";
 import path from "path";
 import { insertConversionJobSchema, youtubeUrlSchema, type AudioQuality } from "@shared/schema";
 
@@ -315,6 +315,74 @@ export async function registerRoutes(
       });
     } catch (err) {
       console.error("Download endpoint error:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/preview/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const job = await storage.getConversionJob(id);
+
+      if (!job) {
+        return res.status(404).json({ error: "Conversion job not found" });
+      }
+
+      if (job.status !== "ready") {
+        return res.status(400).json({ error: "File is not ready for preview" });
+      }
+
+      if (!job.downloadPath) {
+        return res.status(404).json({ error: "File path not available." });
+      }
+
+      if (!existsSync(job.downloadPath)) {
+        return res.status(404).json({ error: "File not found. It may have expired." });
+      }
+
+      const filePath = job.downloadPath;
+      const stat = statSync(filePath);
+      const fileSize = stat.size;
+
+      const PREVIEW_DURATION_SECONDS = 30;
+      const estimatedBitrate = 128 * 1024 / 8;
+      const previewBytes = Math.min(fileSize, PREVIEW_DURATION_SECONDS * estimatedBitrate);
+
+      const range = req.headers.range;
+      
+      if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? Math.min(parseInt(parts[1], 10), previewBytes - 1) : Math.min(start + 1024 * 1024, previewBytes - 1);
+        
+        if (start >= previewBytes) {
+          res.status(416).json({ error: "Requested range not satisfiable" });
+          return;
+        }
+
+        const chunkSize = (end - start) + 1;
+        const stream = createReadStream(filePath, { start, end });
+
+        res.writeHead(206, {
+          "Content-Range": `bytes ${start}-${end}/${previewBytes}`,
+          "Accept-Ranges": "bytes",
+          "Content-Length": chunkSize,
+          "Content-Type": "audio/mpeg",
+        });
+
+        stream.pipe(res);
+      } else {
+        res.writeHead(200, {
+          "Content-Length": previewBytes,
+          "Content-Type": "audio/mpeg",
+          "Accept-Ranges": "bytes",
+        });
+
+        const stream = createReadStream(filePath, { start: 0, end: previewBytes - 1 });
+        stream.pipe(res);
+      }
+    } catch (err) {
+      console.error("Preview endpoint error:", err);
       res.status(500).json({ error: "Internal server error" });
     }
   });
