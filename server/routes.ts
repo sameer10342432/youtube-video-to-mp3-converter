@@ -6,6 +6,8 @@ import { existsSync, unlinkSync, statSync, mkdirSync, createReadStream, copyFile
 import path from "path";
 import { insertConversionJobSchema, youtubeUrlSchema, type AudioQuality } from "@shared/schema";
 
+const YTDLP_PATH = path.join(process.cwd(), "yt-dlp");
+
 const TEMP_DIR = path.join(process.cwd(), "temp");
 const CACHE_DIR = path.join(TEMP_DIR, "cache");
 const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
@@ -140,10 +142,12 @@ function sanitizeFilename(name: string): string {
 
 async function getVideoInfo(url: string): Promise<{ title: string; duration: number } | null> {
   return new Promise((resolve) => {
-    const ytdlp = spawn("yt-dlp", [
+    const ytdlp = spawn(YTDLP_PATH, [
       "--print", "%(title)s",
       "--print", "%(duration)s",
       "--no-playlist",
+      "--no-warnings",
+      "--ignore-errors",
       url
     ]);
 
@@ -200,13 +204,14 @@ async function downloadAndConvert(
 
     const audioQuality = getYtdlpAudioQuality(quality);
     
-    const ytdlp = spawn("yt-dlp", [
+    const ytdlp = spawn(YTDLP_PATH, [
       "-x",
       "--audio-format", "mp3",
       "--audio-quality", audioQuality,
       "-o", outputPath,
       "--no-playlist",
       "--progress",
+      "--no-warnings",
       url
     ]);
 
