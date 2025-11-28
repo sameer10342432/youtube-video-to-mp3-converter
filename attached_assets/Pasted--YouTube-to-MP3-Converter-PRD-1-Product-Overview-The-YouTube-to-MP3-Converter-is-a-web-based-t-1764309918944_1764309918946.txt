@@ -1,0 +1,151 @@
+🎧 YouTube to MP3 Converter – PRD
+1. Product Overview
+
+The YouTube to MP3 Converter is a web-based tool that allows users to convert video content from YouTube into downloadable MP3 audio files in real time, with fast processing, high compatibility, and simple user interaction.
+
+The system will operate without requiring any external AI or paid API keys. Conversion will be powered by backend processing using public open tools/libraries and direct media extraction pipelines.
+
+2. Goals and Success Metrics
+✅ Goals
+
+Convert any valid YouTube video link to MP3 in real time
+
+Provide stable frontend UI and scalable backend processing
+
+Ensure fast conversion speed and audio quality retention
+
+Allow users to download converted audio instantly
+
+📊 Success Metrics
+Metric	Target
+Conversion Time	≤ 20 seconds for 10-minute video
+Audio Quality	128kbps or higher
+Uptime	99.5%
+Max File Length	2 hours video support
+Device Support	Mobile, Desktop, Tablet
+Browser Support	Chrome, Firefox, Edge, Safari
+3. Target Users
+
+General internet users who want to extract YouTube audio
+
+Content listeners who want offline music or audio files
+
+Creators who want audio from long videos (podcasts, lectures)
+
+4. Key Features
+🔗 Link Handling
+
+✔ Accept YouTube URLs
+✔ Auto-validate entered link (detect if playable video exists)
+
+⚙ Backend Conversion
+
+✔ Extract audio stream using open-source toolchain
+✔ Convert extracted media to MP3 and make available for download
+
+📥 Download System
+
+✔ Show progress indicator
+✔ Provide secure download link for generated MP3 file
+
+🌐 Frontend UI
+
+✔ Simple input box + Convert button
+✔ Progress bar + audio file size preview
+✔ Mobile-friendly responsive interface
+
+5. Functional Requirements
+Frontend (UI)
+Feature	Requirement
+Input Field	Paste YouTube link
+Convert Button	Start real-time conversion
+Progress Bar	Display conversion progress
+Download Button	Enabled after MP3 generated
+Error Handling	Show helpful messages if invalid
+Backend (Server)
+Function	Requirement
+Video Validation	Check link contains valid YouTube video
+Audio Extraction	Pull audio stream using open-source libraries
+Format Conversion	Convert audio to MP3
+Storage	Temporarily store MP3 until downloaded
+Download Generation	Serve MP3 as downloadable file
+6. Tech Stack Recommendations
+Layer	Suggested Technology
+Frontend	HTML, CSS, JavaScript
+Backend	Node.js / Python
+Audio Processing	FFmpeg
+Video Extraction	yt-dlp
+Hosting	VPS / Cloud Server
+CDN (optional)	Static assets only
+Framework (optional)	React / Next.js
+
+Entities involved in the processing flow include:
+
+Media conversion engine powered by FFmpeg
+
+Video/audio extraction using yt-dlp
+
+Backend utilities via yt-dlp software ecosystem
+
+Frontend hosting options like Vercel
+
+7. Non-Functional Requirements
+Performance
+
+⚡ Fast real-time conversion
+⚡ Efficient CPU usage with queued processing for multiple users
+
+Security
+
+🔐 No malware downloads
+🔐 Block abusive or automated request flooding
+
+Accessibility
+
+👁 Support screen-friendly layout
+👂 Clear messaging states (loading, success, errors)
+
+8. Error Handling & States
+Scenario	Behavior
+Invalid link	Show error message on UI
+Removed video	Notify "Video not available"
+Conversion failed	Show retry option
+Server overload	Queue request and estimate position
+9. User Flow
+
+User pastes YouTube link
+
+System validates the video
+
+Backend extracts audio stream
+
+FFmpeg converts stream to MP3
+
+Download button becomes active
+
+User downloads file
+
+Temporary MP3 file is auto-removed later
+
+10. Legal & Compliance Notes
+
+⚠ YouTube media extraction must follow copyright laws in the user’s country
+⚠ The tool should not encourage or allow copyrighted download misuse
+⚠ Terms must clarify usage responsibility lies with the user
+
+11. Future Enhancements (Optional)
+
+Add quality selector (128kbps, 192kbps, 320kbps)
+
+Allow audio preview before download
+
+Add history list of recent conversions
+
+Implement faster caching for repeated requests
+
+12. Risks & Mitigation
+Risk	Mitigation
+Slow conversion	Optimize FFmpeg audio-only pipeline
+High traffic load	Use worker queues & rate limits
+Low audio quality	Force best audio stream extraction
+Abuse by bots	Add request throttling
