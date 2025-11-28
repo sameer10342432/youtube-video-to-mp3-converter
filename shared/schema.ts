@@ -21,6 +21,7 @@ export const conversionJobSchema = z.object({
   fileName: z.string().optional(),
   downloadPath: z.string().optional(),
   error: z.string().optional(),
+  cached: z.boolean().optional(),
 });
 
 export type ConversionJob = z.infer<typeof conversionJobSchema>;

@@ -2,15 +2,105 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spawn } from "child_process";
-import { existsSync, unlinkSync, statSync, mkdirSync, createReadStream } from "fs";
+import { existsSync, unlinkSync, statSync, mkdirSync, createReadStream, copyFileSync, readdirSync } from "fs";
 import path from "path";
 import { insertConversionJobSchema, youtubeUrlSchema, type AudioQuality } from "@shared/schema";
 
 const TEMP_DIR = path.join(process.cwd(), "temp");
+const CACHE_DIR = path.join(TEMP_DIR, "cache");
+const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 if (!existsSync(TEMP_DIR)) {
   mkdirSync(TEMP_DIR, { recursive: true });
 }
+
+if (!existsSync(CACHE_DIR)) {
+  mkdirSync(CACHE_DIR, { recursive: true });
+}
+
+function getCachedFilePath(videoId: string, quality: AudioQuality): string {
+  return path.join(CACHE_DIR, videoId, `${quality}.mp3`);
+}
+
+function isCached(videoId: string, quality: AudioQuality): boolean {
+  const cachePath = getCachedFilePath(videoId, quality);
+  if (!existsSync(cachePath)) {
+    return false;
+  }
+  try {
+    const stats = statSync(cachePath);
+    const age = Date.now() - stats.mtimeMs;
+    if (age > CACHE_MAX_AGE_MS) {
+      try {
+        unlinkSync(cachePath);
+      } catch {}
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function cacheFile(videoId: string, quality: AudioQuality, sourcePath: string): boolean {
+  try {
+    const videoDir = path.join(CACHE_DIR, videoId);
+    if (!existsSync(videoDir)) {
+      mkdirSync(videoDir, { recursive: true });
+    }
+    const cachePath = getCachedFilePath(videoId, quality);
+    copyFileSync(sourcePath, cachePath);
+    return true;
+  } catch (err) {
+    console.error("Cache file error:", err);
+    return false;
+  }
+}
+
+function cleanupOldCacheEntries(): void {
+  try {
+    if (!existsSync(CACHE_DIR)) return;
+    
+    const videoDirs = readdirSync(CACHE_DIR);
+    for (const videoId of videoDirs) {
+      const videoDir = path.join(CACHE_DIR, videoId);
+      try {
+        const stats = statSync(videoDir);
+        if (!stats.isDirectory()) continue;
+        
+        const files = readdirSync(videoDir);
+        let hasValidFiles = false;
+        
+        for (const file of files) {
+          const filePath = path.join(videoDir, file);
+          try {
+            const fileStats = statSync(filePath);
+            const age = Date.now() - fileStats.mtimeMs;
+            if (age > CACHE_MAX_AGE_MS) {
+              unlinkSync(filePath);
+            } else {
+              hasValidFiles = true;
+            }
+          } catch {}
+        }
+        
+        if (!hasValidFiles) {
+          try {
+            const remainingFiles = readdirSync(videoDir);
+            if (remainingFiles.length === 0) {
+              require("fs").rmdirSync(videoDir);
+            }
+          } catch {}
+        }
+      } catch {}
+    }
+  } catch (err) {
+    console.error("Cache cleanup error:", err);
+  }
+}
+
+setInterval(cleanupOldCacheEntries, 60 * 60 * 1000);
+cleanupOldCacheEntries();
 
 function formatDuration(seconds: number): string {
   const hrs = Math.floor(seconds / 3600);
@@ -187,6 +277,32 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Could not extract video ID from URL" });
       }
 
+      if (isCached(videoId, quality)) {
+        const cachePath = getCachedFilePath(videoId, quality);
+        const stats = statSync(cachePath);
+        
+        const videoInfo = await getVideoInfo(youtubeUrl);
+        const videoTitle = videoInfo?.title || `Video_${videoId}`;
+        const sanitizedTitle = sanitizeFilename(videoTitle);
+        const fileName = `${sanitizedTitle}.mp3`;
+        const duration = videoInfo?.duration ? formatDuration(videoInfo.duration) : undefined;
+        
+        const job = await storage.createConversionJob({ youtubeUrl, quality });
+        await storage.updateConversionJob(job.id, {
+          status: "ready",
+          progress: 100,
+          videoTitle,
+          videoDuration: duration,
+          fileName,
+          fileSize: formatFileSize(stats.size),
+          downloadPath: cachePath,
+          cached: true,
+        });
+
+        console.log(`Serving from cache: ${videoId}/${quality}.mp3`);
+        return res.json({ id: job.id, status: "ready", cached: true });
+      }
+
       const job = await storage.createConversionJob({ youtubeUrl, quality });
 
       (async () => {
@@ -226,6 +342,12 @@ export async function registerRoutes(
 
           if (success && existsSync(outputPath)) {
             const stats = statSync(outputPath);
+            
+            const cached = cacheFile(videoId, quality, outputPath);
+            if (cached) {
+              console.log(`Cached file: ${videoId}/${quality}.mp3`);
+            }
+            
             await storage.updateConversionJob(job.id, {
               status: "ready",
               progress: 100,
