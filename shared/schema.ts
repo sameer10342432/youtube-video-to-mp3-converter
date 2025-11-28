@@ -1,18 +1,40 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+export const conversionStatusSchema = z.enum([
+  "validating",
+  "extracting",
+  "converting",
+  "ready",
+  "error"
+]);
+
+export type ConversionStatus = z.infer<typeof conversionStatusSchema>;
+
+export const conversionJobSchema = z.object({
+  id: z.string(),
+  youtubeUrl: z.string().url(),
+  status: conversionStatusSchema,
+  progress: z.number().min(0).max(100),
+  videoTitle: z.string().optional(),
+  videoDuration: z.string().optional(),
+  fileSize: z.string().optional(),
+  fileName: z.string().optional(),
+  downloadPath: z.string().optional(),
+  error: z.string().optional(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export type ConversionJob = z.infer<typeof conversionJobSchema>;
+
+export const insertConversionJobSchema = z.object({
+  youtubeUrl: z.string().url(),
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+export type InsertConversionJob = z.infer<typeof insertConversionJobSchema>;
+
+export const youtubeUrlSchema = z.string().refine(
+  (url) => {
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/|v\/)|youtu\.be\/)[\w-]+/;
+    return youtubeRegex.test(url);
+  },
+  { message: "Please enter a valid YouTube URL" }
+);
