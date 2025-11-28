@@ -1,10 +1,17 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   Select,
   SelectContent,
@@ -26,13 +33,166 @@ import {
   Loader2,
   Clock,
   HardDrive,
+  History,
+  RotateCcw,
+  Trash2,
 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 type ConversionState = "idle" | "processing" | "ready" | "error";
 
 interface ConversionResult {
   job: ConversionJob;
   downloadUrl?: string;
+}
+
+interface HistoryEntry {
+  id: string;
+  videoTitle: string;
+  videoDuration: string;
+  fileSize: string;
+  quality: AudioQuality;
+  timestamp: number;
+  youtubeUrl: string;
+}
+
+const HISTORY_STORAGE_KEY = "yt2mp3_conversion_history";
+const MAX_HISTORY_ITEMS = 10;
+
+function getHistoryFromStorage(): HistoryEntry[] {
+  try {
+    const stored = localStorage.getItem(HISTORY_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error("Failed to parse history from localStorage:", error);
+  }
+  return [];
+}
+
+function saveHistoryToStorage(history: HistoryEntry[]): void {
+  try {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+  } catch (error) {
+    console.error("Failed to save history to localStorage:", error);
+  }
+}
+
+function formatRelativeTime(timestamp: number): string {
+  return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+}
+
+interface HistorySectionProps {
+  history: HistoryEntry[];
+  onConvertAgain: (url: string, quality: AudioQuality) => void;
+  onClearHistory: () => void;
+}
+
+function HistorySection({ history, onConvertAgain, onClearHistory }: HistorySectionProps) {
+  if (history.length === 0) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <Card className="p-6 rounded-xl" data-testid="section-history-empty">
+          <div className="flex items-center gap-2 mb-4">
+            <History className="w-5 h-5 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">Recent Conversions</h2>
+          </div>
+          <p className="text-muted-foreground text-center py-4" data-testid="text-empty-history">
+            No conversion history yet
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+      <Accordion type="single" collapsible defaultValue="history">
+        <AccordionItem value="history" className="border-none">
+          <Card className="rounded-xl overflow-visible" data-testid="section-history">
+            <AccordionTrigger
+              className="px-6 py-4 hover:no-underline"
+              data-testid="button-toggle-history"
+            >
+              <div className="flex items-center gap-2">
+                <History className="w-5 h-5 text-muted-foreground" />
+                <span className="text-lg font-semibold">Recent Conversions</span>
+                <Badge variant="secondary" className="ml-2" data-testid="badge-history-count">
+                  {history.length}
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-4">
+              <div className="flex justify-end mb-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClearHistory}
+                  className="text-muted-foreground gap-1"
+                  data-testid="button-clear-history"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Clear History
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {history.map((entry) => (
+                  <Card
+                    key={entry.id}
+                    className="p-4 rounded-lg bg-muted/30"
+                    data-testid={`card-history-item-${entry.id}`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <p
+                          className="font-medium truncate"
+                          title={entry.videoTitle}
+                          data-testid={`text-history-title-${entry.id}`}
+                        >
+                          {entry.videoTitle || "Unknown Title"}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                          {entry.videoDuration && (
+                            <span className="flex items-center gap-1" data-testid={`text-history-duration-${entry.id}`}>
+                              <Clock className="w-3 h-3" />
+                              {entry.videoDuration}
+                            </span>
+                          )}
+                          {entry.fileSize && (
+                            <span className="flex items-center gap-1" data-testid={`text-history-size-${entry.id}`}>
+                              <HardDrive className="w-3 h-3" />
+                              {entry.fileSize}
+                            </span>
+                          )}
+                          <Badge variant="outline" className="text-xs" data-testid={`badge-history-quality-${entry.id}`}>
+                            {entry.quality} kbps
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground" data-testid={`text-history-timestamp-${entry.id}`}>
+                          {formatRelativeTime(entry.timestamp)}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onConvertAgain(entry.youtubeUrl, entry.quality)}
+                        className="gap-1 shrink-0"
+                        data-testid={`button-convert-again-${entry.id}`}
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        Convert Again
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </AccordionContent>
+          </Card>
+        </AccordionItem>
+      </Accordion>
+    </div>
+  );
 }
 
 export default function Home() {
@@ -44,6 +204,57 @@ export default function Home() {
   const [progressMessage, setProgressMessage] = useState("");
   const [conversionResult, setConversionResult] = useState<ConversionResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [currentConversionUrl, setCurrentConversionUrl] = useState("");
+
+  useEffect(() => {
+    setHistory(getHistoryFromStorage());
+  }, []);
+
+  const saveToHistory = useCallback((job: ConversionJob, youtubeUrl: string, quality: AudioQuality) => {
+    const newEntry: HistoryEntry = {
+      id: job.id,
+      videoTitle: job.videoTitle || "Unknown Title",
+      videoDuration: job.videoDuration || "",
+      fileSize: job.fileSize || "",
+      quality,
+      timestamp: Date.now(),
+      youtubeUrl,
+    };
+
+    setHistory((prev) => {
+      const existingIndex = prev.findIndex((entry) => entry.id === job.id);
+      let updated: HistoryEntry[];
+      
+      if (existingIndex >= 0) {
+        updated = [...prev];
+        updated[existingIndex] = newEntry;
+      } else {
+        updated = [newEntry, ...prev].slice(0, MAX_HISTORY_ITEMS);
+      }
+      
+      saveHistoryToStorage(updated);
+      return updated;
+    });
+  }, []);
+
+  const handleClearHistory = useCallback(() => {
+    setHistory([]);
+    saveHistoryToStorage([]);
+  }, []);
+
+  const handleConvertAgain = useCallback((youtubeUrl: string, newQuality: AudioQuality) => {
+    setUrl(youtubeUrl);
+    setQuality(newQuality);
+    setUrlError(null);
+    setConversionState("idle");
+    setProgress(0);
+    setProgressMessage("");
+    setConversionResult(null);
+    setErrorMessage(null);
+    
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const validateUrl = useCallback((value: string) => {
     if (!value.trim()) {
@@ -65,6 +276,7 @@ export default function Home() {
       setProgress(0);
       setProgressMessage("Validating YouTube link...");
       setErrorMessage(null);
+      setCurrentConversionUrl(youtubeUrl);
 
       const response = await apiRequest("POST", "/api/convert", { youtubeUrl, quality });
       const data = await response.json();
@@ -124,6 +336,7 @@ export default function Home() {
     onSuccess: (result) => {
       setConversionResult(result);
       setConversionState("ready");
+      saveToHistory(result.job, currentConversionUrl, quality);
     },
     onError: (error: Error) => {
       setConversionState("error");
@@ -389,6 +602,12 @@ export default function Home() {
             </Card>
           </div>
         </section>
+
+        <HistorySection
+          history={history}
+          onConvertAgain={handleConvertAgain}
+          onClearHistory={handleClearHistory}
+        />
 
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
