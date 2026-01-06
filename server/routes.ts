@@ -6,7 +6,7 @@ import { existsSync, unlinkSync, statSync, mkdirSync, createReadStream, copyFile
 import path from "path";
 import { insertConversionJobSchema, youtubeUrlSchema, type AudioQuality } from "@shared/schema";
 
-const YTDLP_PATH = path.join(process.cwd(), "yt-dlp");
+const YTDLP_PATH = path.join(process.cwd(), process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
 
 const TEMP_DIR = path.join(process.cwd(), "temp");
 const CACHE_DIR = path.join(TEMP_DIR, "cache");
@@ -35,7 +35,7 @@ function isCached(videoId: string, quality: AudioQuality): boolean {
     if (age > CACHE_MAX_AGE_MS) {
       try {
         unlinkSync(cachePath);
-      } catch {}
+      } catch { }
       return false;
     }
     return true;
@@ -62,17 +62,17 @@ function cacheFile(videoId: string, quality: AudioQuality, sourcePath: string): 
 function cleanupOldCacheEntries(): void {
   try {
     if (!existsSync(CACHE_DIR)) return;
-    
+
     const videoDirs = readdirSync(CACHE_DIR);
     for (const videoId of videoDirs) {
       const videoDir = path.join(CACHE_DIR, videoId);
       try {
         const stats = statSync(videoDir);
         if (!stats.isDirectory()) continue;
-        
+
         const files = readdirSync(videoDir);
         let hasValidFiles = false;
-        
+
         for (const file of files) {
           const filePath = path.join(videoDir, file);
           try {
@@ -83,18 +83,18 @@ function cleanupOldCacheEntries(): void {
             } else {
               hasValidFiles = true;
             }
-          } catch {}
+          } catch { }
         }
-        
+
         if (!hasValidFiles) {
           try {
             const remainingFiles = readdirSync(videoDir);
             if (remainingFiles.length === 0) {
               require("fs").rmdirSync(videoDir);
             }
-          } catch {}
+          } catch { }
         }
-      } catch {}
+      } catch { }
     }
   } catch (err) {
     console.error("Cache cleanup error:", err);
@@ -108,7 +108,7 @@ function formatDuration(seconds: number): string {
   const hrs = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
-  
+
   if (hrs > 0) {
     return `${hrs}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   }
@@ -125,7 +125,7 @@ function extractVideoId(url: string): string | null {
   const patterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
   ];
-  
+
   for (const pattern of patterns) {
     const match = url.match(pattern);
     if (match) return match[1];
@@ -194,8 +194,8 @@ function getYtdlpAudioQuality(quality: AudioQuality): string {
 }
 
 async function downloadAndConvert(
-  url: string, 
-  outputPath: string, 
+  url: string,
+  outputPath: string,
   quality: AudioQuality,
   onProgress: (progress: number, stage: string) => void
 ): Promise<boolean> {
@@ -203,8 +203,8 @@ async function downloadAndConvert(
     onProgress(10, "extracting");
 
     const audioQuality = getYtdlpAudioQuality(quality);
-    
-    const ytdlp = spawn(YTDLP_PATH, [
+
+    const ytdlpArgs = [
       "-x",
       "--audio-format", "mp3",
       "--audio-quality", audioQuality,
@@ -213,7 +213,16 @@ async function downloadAndConvert(
       "--progress",
       "--no-warnings",
       url
-    ]);
+    ];
+
+    if (process.platform === "win32") {
+      const ffmpegPath = path.join(process.env.LOCALAPPDATA || "", "Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.0.1-full_build/bin");
+      if (existsSync(path.join(ffmpegPath, "ffmpeg.exe"))) {
+        ytdlpArgs.splice(ytdlpArgs.length - 1, 0, "--ffmpeg-location", ffmpegPath);
+      }
+    }
+
+    const ytdlp = spawn(YTDLP_PATH, ytdlpArgs);
 
     ytdlp.stdout.on("data", (data) => {
       const output = data.toString();
@@ -233,7 +242,7 @@ async function downloadAndConvert(
         const overallProgress = 10 + (downloadProgress * 0.7);
         onProgress(Math.min(80, overallProgress), "extracting");
       }
-      
+
       if (output.includes("Destination:") || output.includes("Post-process")) {
         onProgress(85, "converting");
       }
@@ -262,7 +271,7 @@ interface QueuedJob {
 class ConversionQueue {
   private static readonly MAX_CONCURRENT = 3;
   private static readonly ESTIMATED_CONVERSION_TIME_SECONDS = 30;
-  
+
   private activeJobs: Set<string> = new Set();
   private waitingQueue: QueuedJob[] = [];
 
@@ -276,19 +285,19 @@ class ConversionQueue {
     this.waitingQueue.push({ jobId, callback });
     const position = this.waitingQueue.length;
     const estimatedWait = this.getEstimatedWait(position);
-    
+
     return { queued: true, position, estimatedWait };
   }
 
   private dequeue(jobId: string): void {
     this.activeJobs.delete(jobId);
-    
+
     if (this.waitingQueue.length > 0) {
       const next = this.waitingQueue.shift()!;
       this.activeJobs.add(next.jobId);
-      
+
       this.updateQueuePositions();
-      
+
       next.callback().finally(() => this.dequeue(next.jobId));
     }
   }
@@ -298,7 +307,7 @@ class ConversionQueue {
       const queuedJob = this.waitingQueue[i];
       const position = i + 1;
       const estimatedWait = this.getEstimatedWait(position);
-      
+
       await storage.updateConversionJob(queuedJob.jobId, {
         queuePosition: position,
         estimatedWaitTime: estimatedWait,
@@ -310,16 +319,16 @@ class ConversionQueue {
     if (this.activeJobs.has(jobId)) {
       return 0;
     }
-    
+
     const index = this.waitingQueue.findIndex(job => job.jobId === jobId);
     return index >= 0 ? index + 1 : -1;
   }
 
   getEstimatedWait(position: number): string {
     if (position <= 0) return "";
-    
+
     const totalSeconds = position * ConversionQueue.ESTIMATED_CONVERSION_TIME_SECONDS;
-    
+
     if (totalSeconds < 60) {
       return `~${totalSeconds} seconds`;
     } else if (totalSeconds < 120) {
@@ -349,11 +358,11 @@ export async function registerRoutes(
   app.post("/api/convert", async (req: Request, res: Response) => {
     try {
       const parseResult = insertConversionJobSchema.safeParse(req.body);
-      
+
       if (!parseResult.success) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: "Invalid request body",
-          details: parseResult.error.errors 
+          details: parseResult.error.errors
         });
       }
 
@@ -372,13 +381,13 @@ export async function registerRoutes(
       if (isCached(videoId, quality)) {
         const cachePath = getCachedFilePath(videoId, quality);
         const stats = statSync(cachePath);
-        
+
         const videoInfo = await getVideoInfo(youtubeUrl);
         const videoTitle = videoInfo?.title || `Video_${videoId}`;
         const sanitizedTitle = sanitizeFilename(videoTitle);
         const fileName = `${sanitizedTitle}.mp3`;
         const duration = videoInfo?.duration ? formatDuration(videoInfo.duration) : undefined;
-        
+
         const job = await storage.createConversionJob({ youtubeUrl, quality });
         await storage.updateConversionJob(job.id, {
           status: "ready",
@@ -406,7 +415,7 @@ export async function registerRoutes(
           });
 
           const videoInfo = await getVideoInfo(youtubeUrl);
-          
+
           if (!videoInfo) {
             await storage.updateConversionJob(job.id, {
               status: "error",
@@ -440,12 +449,12 @@ export async function registerRoutes(
 
           if (success && existsSync(outputPath)) {
             const stats = statSync(outputPath);
-            
+
             const cached = cacheFile(videoId, quality, outputPath);
             if (cached) {
               console.log(`Cached file: ${videoId}/${quality}.mp3`);
             }
-            
+
             await storage.updateConversionJob(job.id, {
               status: "ready",
               progress: 100,
@@ -486,11 +495,11 @@ export async function registerRoutes(
           queuePosition: queueResult.position,
           estimatedWaitTime: queueResult.estimatedWait,
         });
-        
+
         console.log(`Job ${job.id} queued at position ${queueResult.position}. Active: ${conversionQueue.getActiveCount()}, Waiting: ${conversionQueue.getQueueLength()}`);
-        return res.json({ 
-          id: job.id, 
-          status: "queued", 
+        return res.json({
+          id: job.id,
+          status: "queued",
           queuePosition: queueResult.position,
           estimatedWaitTime: queueResult.estimatedWait,
         });
@@ -543,10 +552,10 @@ export async function registerRoutes(
 
       const fileName = job.fileName || "audio.mp3";
       const filePath = job.downloadPath;
-      
+
       res.setHeader("Content-Type", "audio/mpeg");
       res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(fileName)}"`);
-      
+
       res.sendFile(filePath, (err) => {
         if (err) {
           console.error("File send error:", err);
@@ -588,12 +597,12 @@ export async function registerRoutes(
       const previewBytes = Math.min(fileSize, PREVIEW_DURATION_SECONDS * estimatedBitrate);
 
       const range = req.headers.range;
-      
+
       if (range) {
         const parts = range.replace(/bytes=/, "").split("-");
         const start = parseInt(parts[0], 10);
         const end = parts[1] ? Math.min(parseInt(parts[1], 10), previewBytes - 1) : Math.min(start + 1024 * 1024, previewBytes - 1);
-        
+
         if (start >= previewBytes) {
           res.status(416).json({ error: "Requested range not satisfiable" });
           return;
